@@ -1,0 +1,31 @@
+[project]
+name = "djkids-cancel-alert-bot"
+version = "0.1.0"
+description = "Telegram cancel-seat alert bot for Daejeon Kids Center programs"
+requires-python = ">=3.11"
+dependencies = [
+    "aiogram>=3.6,<4",
+    "apscheduler>=3.10,<4",
+    "beautifulsoup4>=4.12,<5",
+    "httpx>=0.27,<1",
+    "pydantic-settings>=2.2,<3",
+    "python-dotenv>=1.0,<2",
+    "sqlalchemy>=2.0,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0,<9",
+    "pytest-asyncio>=0.23,<1",
+]
+playwright = [
+    "playwright>=1.44,<2",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
