@@ -76,6 +76,7 @@ def open_page_keyboard(url: str) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [InlineKeyboardButton(text="예약 페이지 열기", url=url)],
+            [InlineKeyboardButton(text="내 감시 목록 보기", callback_data="watch:list")],
             [InlineKeyboardButton(text="다른 프로그램 선택", callback_data="watch:start")],
         ]
     )
