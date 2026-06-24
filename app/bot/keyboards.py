@@ -37,7 +37,12 @@ def month_keyboard(dates: Iterable[date]) -> InlineKeyboardMarkup:
 def date_keyboard(dates: Iterable[date]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text=f"{day.month}/{day.day}", callback_data=f"watch:date:{day}")]
+            [
+                InlineKeyboardButton(
+                    text=f"{day.month}/{day.day} ({_weekday_label(day)})",
+                    callback_data=f"watch:date:{day}",
+                )
+            ]
             for day in sorted(dates)
         ]
     )
@@ -85,3 +90,7 @@ def list_keyboard(targets: list[WatchTarget]) -> InlineKeyboardMarkup | None:
             for idx, target in enumerate(targets, start=1)
         ]
     )
+
+
+def _weekday_label(day: date) -> str:
+    return ("월", "화", "수", "목", "금", "토", "일")[day.weekday()]

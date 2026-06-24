@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from app.djkids.types import ProgramItem
 from app.models import WatchTarget
@@ -59,14 +60,22 @@ def availability_message(
     time_label: str | None,
     raw_status: str,
     checked_at: datetime,
+    timezone: str = "Asia/Seoul",
 ) -> str:
+    local_checked_at = _to_local_time(checked_at, timezone)
     return (
         "예약 가능 상태가 감지되었습니다!\n\n"
         f"날짜: {target_date}\n"
         f"프로그램: {program_name}\n"
         f"회차/시간: {time_label or '-'}\n"
         f"상태: {raw_status}\n"
-        f"확인 시각: {checked_at:%Y-%m-%d %H:%M}\n\n"
+        f"확인 시각: {local_checked_at:%Y-%m-%d %H:%M}\n\n"
         "취소표는 빠르게 사라질 수 있습니다.\n"
         "바로 예약 페이지를 확인해주세요."
     )
+
+
+def _to_local_time(value: datetime, timezone: str) -> datetime:
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=ZoneInfo("UTC"))
+    return value.astimezone(ZoneInfo(timezone))

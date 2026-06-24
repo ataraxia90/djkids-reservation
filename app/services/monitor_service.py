@@ -84,6 +84,7 @@ def match_active_targets(
                     time_label=target.time_label,
                     raw_status=item.raw_status,
                     checked_at=checked_at,
+                    timezone=settings.timezone,
                 ),
             )
             target.notified_at = checked_at

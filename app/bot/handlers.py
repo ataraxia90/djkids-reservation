@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from aiogram import F, Router
 from aiogram.filters import Command
@@ -266,6 +267,7 @@ async def handle_list_callback(callback: CallbackQuery) -> None:
 
 
 async def _send_watch_list(message: Message | CallbackQuery) -> None:
+    settings = get_settings()
     result = await _ensure_user(message)
     session, user = result
     target_message = message.message if isinstance(message, CallbackQuery) else message
@@ -278,9 +280,9 @@ async def _send_watch_list(message: Message | CallbackQuery) -> None:
             return
         lines = ["현재 감시 중인 항목입니다.\n"]
         for idx, target in enumerate(targets, start=1):
-            checked = target.last_checked_at.strftime("%Y-%m-%d %H:%M") if target.last_checked_at else "-"
+            checked = _format_local_time(target.last_checked_at, settings.timezone)
             lines.append(
-                f"{idx}. {target.target_date.isoformat()} {target.program_name}\n"
+                f"{idx}. {_format_date_with_weekday(target.target_date)} {target.program_name}\n"
                 f"   회차/시간: {target.time_label or '-'}\n"
                 f"   상태: {target.last_status or '-'}\n"
                 f"   마지막 확인: {checked}\n"
@@ -288,6 +290,19 @@ async def _send_watch_list(message: Message | CallbackQuery) -> None:
         await target_message.answer("\n".join(lines), reply_markup=list_keyboard(targets))
     finally:
         session.close()
+
+
+def _format_local_time(value: datetime | None, timezone: str) -> str:
+    if value is None:
+        return "-"
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=ZoneInfo("UTC"))
+    return value.astimezone(ZoneInfo(timezone)).strftime("%Y-%m-%d %H:%M")
+
+
+def _format_date_with_weekday(value) -> str:
+    weekday = ("월", "화", "수", "목", "금", "토", "일")[value.weekday()]
+    return f"{value.isoformat()} ({weekday})"
 
 
 @router.message(Command("delete"))
