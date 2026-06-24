@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 from functools import lru_cache
 from zoneinfo import ZoneInfo
 
@@ -12,6 +13,7 @@ class Settings(BaseSettings):
 
     app_env: str = "development"
     timezone: str = "Asia/Seoul"
+    port: int = Field(default_factory=lambda: int(os.environ.get("PORT", "8080")))
 
     telegram_bot_token: str = ""
     admin_telegram_ids: list[int] = Field(default_factory=list)

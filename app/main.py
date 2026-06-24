@@ -8,6 +8,7 @@ from aiogram import Bot, Dispatcher
 from app.bot.handlers import router
 from app.config import get_settings
 from app.db import init_db
+from app.health_server import start_health_server
 from app.logging_config import setup_logging
 from app.scheduler import create_scheduler
 
@@ -25,6 +26,7 @@ async def main() -> None:
     dispatcher = Dispatcher()
     dispatcher.include_router(router)
     scheduler = create_scheduler(settings, bot)
+    await start_health_server(settings.port)
     scheduler.start()
     logger.info("DJKids cancel alert bot started.")
     await dispatcher.start_polling(bot)

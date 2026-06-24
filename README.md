@@ -42,6 +42,7 @@ ALLOWED_TELEGRAM_USER_IDS=123456789
 
 ```env
 ALLOW_PUBLIC_SIGNUP=false
+PORT=8080
 RESERVATION_MONTH_COUNT=3
 CHECK_INTERVAL_MINUTES=1
 CHECK_JITTER_SECONDS=60
@@ -70,6 +71,39 @@ docker compose logs -f
 
 ```bash
 docker compose down
+```
+
+## Render 무료 Web Service 실행
+
+Render 무료 플랜에서는 Background Worker 대신 Web Service로 배포하고, 외부 ping 서비스가 `/health`를 주기적으로 호출하도록 운영할 수 있습니다.
+
+주의: 무료 Web Service의 로컬 파일은 재시작, 재배포, 스핀다운 시 사라질 수 있습니다. SQLite DB(`./data/app.db`)에 저장된 감시 목록도 유실될 수 있으므로 안정 운영에는 유료 Persistent Disk 또는 외부 DB를 사용하세요.
+
+1. Render Dashboard에서 `New` → `Web Service`를 선택합니다.
+2. GitHub 저장소를 연결합니다.
+3. Runtime은 `Docker`를 선택합니다.
+4. Dockerfile Path는 기본값 `./Dockerfile`을 사용합니다.
+5. 환경변수를 설정합니다.
+
+```env
+APP_ENV=production
+TIMEZONE=Asia/Seoul
+TELEGRAM_BOT_TOKEN=123456:replace_me
+ALLOW_PUBLIC_SIGNUP=false
+ADMIN_TELEGRAM_IDS=[123456789]
+ALLOWED_TELEGRAM_USER_IDS=[123456789]
+DATABASE_URL=sqlite:///./data/app.db
+RESERVATION_MONTH_COUNT=3
+CHECK_INTERVAL_MINUTES=1
+CHECK_JITTER_SECONDS=60
+```
+
+Render가 `PORT` 환경변수를 자동으로 제공합니다. 앱은 `/health`와 `/`에서 `ok`를 응답합니다.
+
+배포 후 UptimeRobot 같은 외부 모니터링 서비스에서 다음 URL을 5분마다 호출하도록 설정합니다.
+
+```text
+https://<render-service-name>.onrender.com/health
 ```
 
 ## 로컬 개발

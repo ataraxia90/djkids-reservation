@@ -17,4 +17,6 @@ COPY requirements.md README.md pyproject.toml ./
 
 RUN mkdir -p /app/data
 
+EXPOSE 8080
+
 CMD ["python", "-m", "app.main"]
