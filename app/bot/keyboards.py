@@ -19,6 +19,21 @@ def home_keyboard() -> InlineKeyboardMarkup:
     )
 
 
+def month_keyboard(dates: Iterable[date]) -> InlineKeyboardMarkup:
+    months = sorted({(day.year, day.month) for day in dates})
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=f"{year}년 {month}월",
+                    callback_data=f"watch:month:{year:04d}-{month:02d}",
+                )
+            ]
+            for year, month in months
+        ]
+    )
+
+
 def date_keyboard(dates: Iterable[date]) -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(
         inline_keyboard=[
@@ -30,9 +45,15 @@ def date_keyboard(dates: Iterable[date]) -> InlineKeyboardMarkup:
 
 def program_keyboard(items: list[ProgramItem]) -> InlineKeyboardMarkup:
     rows = []
-    for idx, item in enumerate(items):
-        label = f"{item.program_name} {item.time_label or ''} - {item.raw_status}".strip()
-        rows.append([InlineKeyboardButton(text=label[:64], callback_data=f"watch:item:{idx}")])
+    for item in items:
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text=item.program_name[:64],
+                    callback_data=f"watch:item:{item.callback_token}",
+                )
+            ]
+        )
     rows.append([InlineKeyboardButton(text="다른 날짜 선택", callback_data="watch:start")])
     return InlineKeyboardMarkup(inline_keyboard=rows)
 

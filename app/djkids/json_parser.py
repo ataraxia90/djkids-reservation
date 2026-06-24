@@ -27,6 +27,8 @@ def parse_json_program_items(
         name = str(program.get("progrmEstbsNm") or "").strip()
         if not name:
             continue
+        if not _matches_target_weekday(name, target_date):
+            continue
         capacity = _to_int(program.get("psncpaWhlrs"))
         reserved = _to_int(program.get("resveWhlrs"))
         raw_status = "마감" if capacity is not None and reserved is not None and reserved >= capacity else "예약하기"
@@ -65,6 +67,22 @@ def max_day_from_payload(payload: Any) -> int | None:
     if not isinstance(map_object, dict):
         return None
     return _to_int(map_object.get("maxDay"))
+
+
+def _matches_target_weekday(program_name: str, target_date: date) -> bool:
+    is_weekend = target_date.weekday() >= 5
+    is_saturday = target_date.weekday() == 5
+    is_sunday = target_date.weekday() == 6
+
+    if "토요일" in program_name:
+        return is_saturday
+    if "일요일" in program_name:
+        return is_sunday
+    if "주말" in program_name:
+        return is_weekend
+    if "평일" in program_name:
+        return not is_weekend
+    return True
 
 
 def _to_int(value: Any) -> int | None:

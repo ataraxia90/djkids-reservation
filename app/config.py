@@ -19,7 +19,8 @@ class Settings(BaseSettings):
     allow_public_signup: bool = False
 
     target_url: str = "https://www.djkids.or.kr/resve/indvdl/s0.do?key=m2008167905806"
-    check_interval_minutes: int = 10
+    reservation_month_count: int = 3
+    check_interval_minutes: int = 1
     check_jitter_seconds: int = 60
 
     database_url: str = "sqlite:///./data/app.db"

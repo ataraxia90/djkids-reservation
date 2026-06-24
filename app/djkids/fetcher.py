@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import asyncio
+import calendar
 import json
 import logging
+from collections.abc import Iterator
 from datetime import date
 from urllib.parse import urljoin
 
@@ -52,21 +54,33 @@ async def fetch_program_items_json(settings: Settings) -> tuple[list[ProgramItem
         page.raise_for_status()
         form = _extract_form_defaults(page.text)
         endpoint = urljoin(settings.target_url, "/resve/indvdl/s0_getList.do")
-        first_payload = await _post_json(client, endpoint, form)
-        max_day = max_day_from_payload(first_payload) or 31
-        year = int(form["year"])
-        month = int(form["month"])
 
         items: list[ProgramItem] = []
-        for day in range(1, max_day + 1):
-            data = {
+        for year, month in _iter_months(
+            int(form["year"]),
+            int(form["month"]),
+            settings.reservation_month_count,
+        ):
+            month_form = {
                 **form,
-                "day": f"{day:02d}",
-                "firstAt": "N",
+                "year": f"{year:04d}",
+                "month": f"{month:02d}",
+                "day": "01",
+                "firstAt": "Y",
                 "sttus": "1",
             }
-            payload = first_payload if day == int(form["day"]) else await _post_json(client, endpoint, data)
-            items.extend(parse_json_program_items(payload, settings.target_url, date(year, month, day)))
+            first_payload = await _post_json(client, endpoint, month_form)
+            max_day = max_day_from_payload(first_payload) or calendar.monthrange(year, month)[1]
+            max_day = min(max_day, calendar.monthrange(year, month)[1])
+            for day in range(1, max_day + 1):
+                data = {
+                    **month_form,
+                    "day": f"{day:02d}",
+                    "firstAt": "N",
+                    "sttus": "1",
+                }
+                payload = first_payload if day == 1 else await _post_json(client, endpoint, data)
+                items.extend(parse_json_program_items(payload, settings.target_url, date(year, month, day)))
         return _dedupe_items(items), page.status_code
 
 
@@ -97,6 +111,12 @@ def _extract_form_defaults(html: str) -> dict[str, str]:
     defaults["month"] = f"{int(defaults['month']):02d}"
     defaults["day"] = f"{int(defaults['day']):02d}"
     return defaults
+
+
+def _iter_months(start_year: int, start_month: int, count: int) -> Iterator[tuple[int, int]]:
+    for offset in range(max(count, 1)):
+        month_index = start_month - 1 + offset
+        yield start_year + month_index // 12, month_index % 12 + 1
 
 
 def _dedupe_items(items: list[ProgramItem]) -> list[ProgramItem]:

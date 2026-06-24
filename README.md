@@ -11,7 +11,7 @@
 - `httpx + BeautifulSoup` 기반 예약 페이지 조회 및 파싱
 - `CLOSED`, `AVAILABLE`, `UNKNOWN`, `ERROR` 상태 정규화
 - SQLite 저장: 사용자, 감시 항목, 프로그램 스냅샷, 알림 큐, 알림 로그, 조회 로그
-- APScheduler 기반 기본 10분 주기 모니터링
+- APScheduler 기반 기본 1분 주기 모니터링
 - 중복 알림 방지 및 알림 후 감시 항목 자동 비활성화
 - Docker 및 docker compose 실행 지원
 
@@ -42,7 +42,8 @@ ALLOWED_TELEGRAM_USER_IDS=123456789
 
 ```env
 ALLOW_PUBLIC_SIGNUP=false
-CHECK_INTERVAL_MINUTES=10
+RESERVATION_MONTH_COUNT=3
+CHECK_INTERVAL_MINUTES=1
 CHECK_JITTER_SECONDS=60
 MAX_WATCH_TARGETS_PER_USER=5
 DATABASE_URL=sqlite:///./data/app.db
@@ -111,7 +112,7 @@ HTML fixture 파서는 보조 경로와 테스트 용도로 유지합니다. 파
 
 ## 운영 주의사항
 
-- 기본 조회 주기는 10분입니다. 대상 사이트에 부담을 주지 않도록 너무 짧게 설정하지 마세요.
+- 기본 조회 주기는 1분입니다. 대상 사이트에 부담을 주지 않도록 운영 상황에 맞춰 조정하세요.
 - 사용자 수와 무관하게 전역 조회 1회 후 DB 스냅샷과 감시 항목을 매칭합니다.
 - 실패 시 무한 즉시 재시도하지 않고 제한된 재시도와 backoff를 사용합니다.
 - Bot Token은 코드, README, 로그에 넣지 말고 `.env`로만 관리하세요.

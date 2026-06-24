@@ -13,6 +13,7 @@ from app.bot.keyboards import (
     date_keyboard,
     home_keyboard,
     list_keyboard,
+    month_keyboard,
     open_page_keyboard,
     program_keyboard,
 )
@@ -126,11 +127,37 @@ async def _start_watch_flow(message: Message | CallbackQuery) -> None:
         if not dates:
             await target_message.answer("현재 선택 가능한 예약 항목을 찾지 못했습니다.")
             return
-        await target_message.answer("감시할 날짜를 선택해주세요.", reply_markup=date_keyboard(dates))
+        await target_message.answer("감시할 달을 선택해주세요.", reply_markup=month_keyboard(dates))
     except Exception as exc:  # noqa: BLE001
         await target_message.answer(f"예약 상태 조회에 실패했습니다.\n잠시 후 다시 시도해주세요.\n\n오류: {exc}")
     finally:
         session.close()
+
+
+@router.callback_query(F.data.startswith("watch:month:"))
+async def handle_watch_month(callback: CallbackQuery) -> None:
+    await callback.answer()
+    if callback.message is None or callback.from_user is None or callback.data is None:
+        return
+    selected_month = callback.data.removeprefix("watch:month:")
+    try:
+        year, month = (int(part) for part in selected_month.split("-", maxsplit=1))
+    except ValueError:
+        await callback.message.answer("선택한 달 정보를 읽지 못했습니다. /watch로 다시 시작해주세요.")
+        return
+
+    dates = {
+        item.target_date
+        for item in _watch_cache.get(callback.from_user.id, [])
+        if item.target_date.year == year and item.target_date.month == month
+    }
+    if not dates:
+        await callback.message.answer("선택한 달의 예약 항목을 찾지 못했습니다. 다시 조회해주세요.")
+        return
+    await callback.message.answer(
+        f"{year}년 {month}월 중 감시할 날짜를 선택해주세요.",
+        reply_markup=date_keyboard(dates),
+    )
 
 
 @router.callback_query(F.data.startswith("watch:date:"))
@@ -159,9 +186,13 @@ async def handle_watch_item(callback: CallbackQuery) -> None:
     if callback.message is None or callback.from_user is None or callback.data is None:
         return
     try:
-        idx = int(callback.data.removeprefix("watch:item:"))
-        item = _date_cache[callback.from_user.id][idx]
-    except (ValueError, IndexError, KeyError):
+        token = callback.data.removeprefix("watch:item:")
+        item = next(
+            item
+            for item in _watch_cache.get(callback.from_user.id, [])
+            if item.callback_token == token
+        )
+    except StopIteration:
         await callback.message.answer("선택 정보가 만료되었습니다. /watch로 다시 시작해주세요.")
         return
     _selected_cache[callback.from_user.id] = item
