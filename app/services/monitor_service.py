@@ -73,6 +73,22 @@ def match_active_targets(
             and should_notify(previous, current)
             and can_receive_notifications(target.user)
         ):
+            logger.info(
+                "Availability detected for watch_target_id=%s user_id=%s date=%s "
+                "program=%r time_label=%r previous_status=%s current_status=%s "
+                "raw_status=%r raw_text=%r source_url=%s checked_at=%s",
+                target.id,
+                target.user_id,
+                item.target_date.isoformat(),
+                item.program_name,
+                item.time_label,
+                previous,
+                current,
+                item.raw_status,
+                item.raw_text,
+                item.source_url,
+                checked_at.isoformat(),
+            )
             enqueue_notification(
                 session=session,
                 user_id=target.user_id,
