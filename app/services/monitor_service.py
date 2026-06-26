@@ -101,6 +101,7 @@ def match_active_targets(
                     raw_status=item.raw_status,
                     checked_at=checked_at,
                     timezone=settings.timezone,
+                    source_url=item.source_url,
                 ),
             )
             target.notified_at = checked_at

@@ -61,8 +61,10 @@ def availability_message(
     raw_status: str,
     checked_at: datetime,
     timezone: str = "Asia/Seoul",
+    source_url: str | None = None,
 ) -> str:
     local_checked_at = _to_local_time(checked_at, timezone)
+    link_text = f"예약 페이지: {source_url}\n\n" if source_url else ""
     return (
         "예약 가능 상태가 감지되었습니다!\n\n"
         f"날짜: {target_date}\n"
@@ -70,6 +72,7 @@ def availability_message(
         f"회차/시간: {time_label or '-'}\n"
         f"상태: {raw_status}\n"
         f"확인 시각: {local_checked_at:%Y-%m-%d %H:%M}\n\n"
+        f"{link_text}"
         "취소표는 빠르게 사라질 수 있습니다.\n"
         "바로 예약 페이지를 확인해주세요."
     )
