@@ -155,8 +155,47 @@ async def handle_watch_month(callback: CallbackQuery) -> None:
     if not dates:
         await callback.message.answer("선택한 달의 예약 항목을 찾지 못했습니다. 다시 조회해주세요.")
         return
+
+    weekend_dates = {day for day in dates if day.weekday() >= 5}
+    show_all_callback_data = f"watch:month-all:{year:04d}-{month:02d}"
+    if not weekend_dates:
+        await callback.message.answer(
+            f"{year}년 {month}월 주말 예약 항목을 찾지 못했습니다.\n"
+            "주중을 포함해서 보려면 달 전체 보여주기를 눌러주세요.",
+            reply_markup=date_keyboard(weekend_dates, show_all_callback_data=show_all_callback_data),
+        )
+        return
+
     await callback.message.answer(
-        f"{year}년 {month}월 중 감시할 날짜를 선택해주세요.",
+        f"{year}년 {month}월 주말 중 감시할 날짜를 선택해주세요.\n"
+        "주중도 보려면 달 전체 보여주기를 눌러주세요.",
+        reply_markup=date_keyboard(weekend_dates, show_all_callback_data=show_all_callback_data),
+    )
+
+
+@router.callback_query(F.data.startswith("watch:month-all:"))
+async def handle_watch_month_all(callback: CallbackQuery) -> None:
+    await callback.answer()
+    if callback.message is None or callback.from_user is None or callback.data is None:
+        return
+    selected_month = callback.data.removeprefix("watch:month-all:")
+    try:
+        year, month = (int(part) for part in selected_month.split("-", maxsplit=1))
+    except ValueError:
+        await callback.message.answer("선택한 달 정보를 읽지 못했습니다. /watch로 다시 시작해주세요.")
+        return
+
+    dates = {
+        item.target_date
+        for item in _watch_cache.get(callback.from_user.id, [])
+        if item.target_date.year == year and item.target_date.month == month
+    }
+    if not dates:
+        await callback.message.answer("선택한 달의 예약 항목을 찾지 못했습니다. 다시 조회해주세요.")
+        return
+
+    await callback.message.answer(
+        f"{year}년 {month}월 전체 날짜 중 감시할 날짜를 선택해주세요.",
         reply_markup=date_keyboard(dates),
     )
 

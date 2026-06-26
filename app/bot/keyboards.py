@@ -34,17 +34,24 @@ def month_keyboard(dates: Iterable[date]) -> InlineKeyboardMarkup:
     )
 
 
-def date_keyboard(dates: Iterable[date]) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text=f"{day.month}/{day.day} ({_weekday_label(day)})",
-                    callback_data=f"watch:date:{day}",
-                )
-            ]
-            for day in sorted(dates)
+def date_keyboard(
+    dates: Iterable[date],
+    *,
+    show_all_callback_data: str | None = None,
+) -> InlineKeyboardMarkup:
+    rows = [
+        [
+            InlineKeyboardButton(
+                text=f"{day.month}/{day.day} ({_weekday_label(day)})",
+                callback_data=f"watch:date:{day}",
+            )
         ]
+        for day in sorted(dates)
+    ]
+    if show_all_callback_data:
+        rows.append([InlineKeyboardButton(text="달 전체 보여주기", callback_data=show_all_callback_data)])
+    return InlineKeyboardMarkup(
+        inline_keyboard=rows
     )
 
 
